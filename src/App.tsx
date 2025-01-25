@@ -107,27 +107,27 @@ function App() {
     html.push('<div class="content">');
     
     if (doaFormData.title) {
-      html.push(`  <h1 id="title" class="text-xl font-bold">${escapeHtml(doaFormData.title)}</h1>`);
+      html.push(`  <h1 id="title" class="text-xl font-bold text-center">${escapeHtml(doaFormData.title)}</h1>`);
     }
     
     if (doaFormData.subtitle) {
-      html.push(`  <h2 id="repeat-instruction" class="text-lg">${escapeHtml(doaFormData.subtitle)}</h2>`);
+      html.push(`  <h2 id="repeat-instruction" class="text-xs text-center">${escapeHtml(doaFormData.subtitle)}</h2>`);
     }
     
     if (doaFormData.arabicDoa) {
-      html.push(`  <p id="arabic-text" class="text-4xl font-arabic" dir="rtl" lang="ar">\n    ${escapeHtml(doaFormData.arabicDoa)}\n  </p>`);
+      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3" dir="rtl" lang="ar">\n    ${escapeHtml(doaFormData.arabicDoa)}\n  </p>`);
     }
     
     if (doaFormData.latin) {
-      html.push(`  <p id="latin-text" class="italic"><i>${escapeHtml(doaFormData.latin)}</i></p>`);
+      html.push(`  <p id="latin-text" class="italic mt-2 text-sm tracking-normal"><i>${escapeHtml(doaFormData.latin)}</i></p>`);
     }
     
     if (doaFormData.meaning) {
-      html.push(`  <p id="translation">${escapeHtml(doaFormData.meaning)}</p>`);
+      html.push(`  <p id="translation" class="mt-2 text-sm tracking-normal">${escapeHtml(doaFormData.meaning)}</p>`);
     }
     
     if (doaFormData.kandungan) {
-      html.push('  <div id="explanation" class="mt-4">');
+      html.push('  <div id="explanation" class="mt-2 text-sm tracking-normal">');
       const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
       paragraphs.forEach(paragraph => {
         html.push(`    <p class="mb-2">${escapeHtml(paragraph.trim())}</p>`);
@@ -136,7 +136,7 @@ function App() {
     }
     
     if (doaFormData.footnote) {
-      html.push('  <div id="hadith-reference" class="text-sm text-gray-600">');
+      html.push('  <div id="hadith-reference" class="text-sm text-gray-600 tracking-normal">');
       const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
       footnoteParagraphs.forEach(paragraph => {
         html.push(`    <p class="mb-2">${escapeHtml(paragraph.trim())}</p>`);
@@ -207,7 +207,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">HTML Content Converter UFA-BI</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
         
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 mb-8">
