@@ -8,6 +8,7 @@ interface DoaFormData {
   latin: string;
   meaning: string;
   kandungan: string;
+  benefit: string;
   footnote: string;
 }
 
@@ -27,6 +28,7 @@ function App() {
     latin: '',
     meaning: '',
     kandungan: '',
+    benefit: '',
     footnote: ''
   });
   const [fatwaFormData, setFatwaFormData] = useState<FatwaFormData>({
@@ -59,6 +61,7 @@ function App() {
       latin: '',
       meaning: '',
       kandungan: '',
+      benefit: '',
       footnote: ''
     });
   };
@@ -72,6 +75,8 @@ function App() {
   };
 
   const detectAndWrapArabicText = (text: string): string => {
+    if (!text) return '';
+    
     // Split text by periods only
     const sentences = text.split(/([.])/);
     let result = '';
@@ -115,54 +120,103 @@ function App() {
   };
 
   const generateDoaHTML = () => {
-    const html: string[] = [];
+    const html = [];
+    
+    html.push('<!DOCTYPE html>');
+    html.push('<html lang="en">');
+    html.push('<head>');
+    html.push('  <meta charset="UTF-8">');
+    html.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+    html.push('  <title>Doa Content</title>');
+    html.push('</head>');
+    html.push('<body>');
     html.push('<div class="content">');
     
+    // Title
     if (doaFormData.title) {
       html.push(`  <h1 id="title" class="text-xl font-bold text-center">${escapeHtml(doaFormData.title)}</h1>`);
     }
     
+    // Subtitle
     if (doaFormData.subtitle) {
       html.push(`  <h2 id="repeat-instruction" class="text-xs text-center">${escapeHtml(doaFormData.subtitle)}</h2>`);
     }
     
+    // Arabic Doa
     if (doaFormData.arabicDoa) {
-      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right" dir="rtl" lang="ar">\n    ${escapeHtml(doaFormData.arabicDoa)}\n  </p>`);
+      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right" dir="rtl" lang="ar">${escapeHtml(doaFormData.arabicDoa)}</p>`);
     }
     
+    // Latin
     if (doaFormData.latin) {
       html.push(`  <p id="latin-text" class="italic mt-2 text-sm tracking-normal"><i>${escapeHtml(doaFormData.latin)}</i></p>`);
     }
     
+    // Meaning
     if (doaFormData.meaning) {
       html.push(`  <p id="translation" class="mt-2 text-sm tracking-normal">${escapeHtml(doaFormData.meaning)}</p>`);
     }
-    
-    if (doaFormData.kandungan) {
-      html.push('  <div id="explanation" class="mt-2 text-sm tracking-normal">');
-      html.push('    <h2 class="text-lg font-semibold mb-2">Penjelasan</h2>');
-      const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
-      paragraphs.forEach(paragraph => {
-        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
-      });
+
+    // Penjelasan section (Kandungan & Keutamaan)
+    if (doaFormData.kandungan || doaFormData.benefit) {
+      html.push('  <div id="explanation-section" class="mt-4">');
+      html.push('    <h2 class="text-xl font-bold mb-4">Penjelasan</h2>');
+      
+      // Kandungan
+      if (doaFormData.kandungan) {
+        html.push('    <div id="explanation" class="mt-2 text-sm tracking-normal">');
+        html.push('      <h3 class="text-lg font-semibold mb-2">Kandungan</h3>');
+        const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
+        paragraphs.forEach(paragraph => {
+          html.push(`      <p>${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
+        });
+        html.push('    </div>');
+      }
+
+      // Keutamaan
+      html.push('    <div id="benefit" class="mt-4 text-sm tracking-normal">');
+      html.push('      <h3 class="text-lg font-semibold mb-2">Keutamaan</h3>');
+      if (doaFormData.benefit) {
+        const paragraphs = doaFormData.benefit.split('\n').filter(p => p.trim());
+        paragraphs.forEach(paragraph => {
+          html.push(`      <p>${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
+        });
+      }
+      html.push('    </div>');
       html.push('  </div>');
     }
     
-    if (doaFormData.footnote) {
-      html.push('  <div id="hadith-reference" class="text-sm text-gray-600 tracking-normal">');
-      const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
-      footnoteParagraphs.forEach(paragraph => {
-        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
-      });
-      html.push('  </div>');
-    }
+    // Footnote/Reference section - Simplified handling
+    if (doaFormData.footnote && doaFormData.footnote.trim()) {
+        html.push('  <div id="hadith-reference" class="mt-4 text-sm text-gray-600 tracking-normal">');
+        html.push('    <h3 class="text-lg font-semibold mb-2">Referensi</h3>');
+        
+        // Process footnote paragraphs with Arabic text detection
+        const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
+        footnoteParagraphs.forEach(paragraph => {
+          html.push(`    <p>${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
+        });
+        
+        html.push('  </div>');
+      }
     
     html.push('</div>');
+    html.push('</body>');
+    html.push('</html>');
+    
     return html.join('\n');
   };
 
   const generateFatwaHTML = () => {
-    const html: string[] = [];
+    const html = [];
+    html.push('<!DOCTYPE html>');
+    html.push('<html lang="en">');
+    html.push('<head>');
+    html.push('  <meta charset="UTF-8">');
+    html.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+    html.push('  <title>Fatwa Content</title>');
+    html.push('</head>');
+    html.push('<body>');
     html.push('<div class="content">');
     
     if (fatwaFormData.question) {
@@ -183,34 +237,41 @@ function App() {
     }
     
     if (fatwaFormData.reference) {
-      html.push('  <div id="reference" class="text-sm text-gray-600">');
+      html.push('  <div id="reference" class="mt-4 text-sm text-gray-600">');
+      html.push('    <h3 class="text-lg font-semibold mb-2">Referensi</h3>');
       const referenceParagraphs = fatwaFormData.reference.split('\n').filter(p => p.trim());
       referenceParagraphs.forEach(paragraph => {
-        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
+        html.push(`    <p>${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
       });
       html.push('  </div>');
     }
     
     html.push('</div>');
+    html.push('</body>');
+    html.push('</html>');
     return html.join('\n');
   };
 
   const downloadContent = () => {
-    const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
-    const blob = new Blob([content], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${activeTab}-content.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
+      const blob = new Blob([content], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${activeTab}-content.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading content:', error);
+    }
   };
 
   const copyContent = async () => {
-    const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
     try {
+      const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
       await navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -219,7 +280,8 @@ function App() {
     }
   };
 
-  const escapeHtml = (unsafe: string) => {
+  const escapeHtml = (unsafe: string): string => {
+    if (!unsafe) return '';
     return unsafe
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -231,7 +293,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">HTML Converter Bekal Islam UFA Official</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
         
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 mb-8">
@@ -282,6 +344,7 @@ function App() {
                     { name: 'latin', label: 'Latin' },
                     { name: 'meaning', label: 'Meaning' },
                     { name: 'kandungan', label: 'Kandungan' },
+                    { name: 'benefit', label: 'Keutamaan' },
                     { name: 'footnote', label: 'Footnote' }
                   ].map((field) => (
                     <div key={field.name}>
@@ -290,7 +353,7 @@ function App() {
                       </label>
                       <textarea
                         name={field.name}
-                        value={doaFormData[field.name as keyof DoaFormData]}
+                        value={doaFormData[field.name as keyof DoaFormData] || ''}
                         onChange={handleDoaChange}
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
                       />
@@ -311,7 +374,7 @@ function App() {
                       </label>
                       <textarea
                         name={field.name}
-                        value={fatwaFormData[field.name as keyof FatwaFormData]}
+                        value={fatwaFormData[field.name as keyof FatwaFormData] || ''}
                         onChange={handleFatwaChange}
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
                       />
