@@ -72,13 +72,18 @@ function App() {
   };
 
   const detectAndWrapArabicText = (text: string): string => {
-    // Replace Arabic text with a single span
-    return text.replace(/[\u0600-\u06FF\s]+/g, match => {
-      if (match.trim()) {
-        return `<p class="mb-2 text-right"><span class="text-3xl font-arabic" dir="rtl" lang="ar">${match}</span></p>`;
+    // Find continuous Arabic text segments (including spaces between Arabic words)
+    const arabicSegments = text.match(/(?:[\u0600-\u06FF]+\s*)+/g) || [];
+    let result = text;
+
+    // Replace each Arabic segment with a wrapped version
+    arabicSegments.forEach(segment => {
+      if (segment.trim()) {
+        result = result.replace(segment, `<p class="mb-2 text-right"><span class="text-3xl font-arabic" dir="rtl" lang="ar">${segment.trim()}</span></p>`);
       }
-      return match;
     });
+
+    return result;
   };
 
   const generateDoaHTML = () => {
@@ -197,7 +202,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">HTML Converter Bekal Islam UFA Official</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
         
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 mb-8">
