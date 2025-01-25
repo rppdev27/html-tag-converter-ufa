@@ -126,7 +126,7 @@ function App() {
     }
     
     if (doaFormData.arabicDoa) {
-      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right" dir="rtl" lang="ar">${escapeHtml(doaFormData.arabicDoa)}</p>`);
+      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right font-bold" dir="rtl" lang="ar">${escapeHtml(doaFormData.arabicDoa)}</p>`);
     }
     
     if (doaFormData.latin) {
