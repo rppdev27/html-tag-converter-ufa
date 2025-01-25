@@ -72,14 +72,42 @@ function App() {
   };
 
   const detectAndWrapArabicText = (text: string): string => {
-    // Find continuous Arabic text segments (including spaces between Arabic words)
-    const arabicSegments = text.match(/(?:[\u0600-\u06FF]+\s*)+/g) || [];
-    let result = text;
+    // Split text by periods only
+    const sentences = text.split(/([.])/);
+    let result = '';
 
-    // Replace each Arabic segment with a wrapped version
-    arabicSegments.forEach(segment => {
-      if (segment.trim()) {
-        result = result.replace(segment, `<p class="mb-2 text-right"><span class="text-3xl font-arabic" dir="rtl" lang="ar">${segment.trim()}</span></p>`);
+    sentences.forEach((sentence, index) => {
+      if (sentence === '.') {
+        result += sentence;
+        return;
+      }
+
+      // Check if the sentence contains Arabic text
+      if (/[\u0600-\u06FF]/.test(sentence)) {
+        // Handle text with colons and semicolons
+        const parts = sentence.split(/([:;؛]\s*)/);
+        let processedSentence = '';
+
+        parts.forEach((part, partIndex) => {
+          if (part.match(/[:;؛]\s*/)) {
+            processedSentence += part;
+          } else if (/[\u0600-\u06FF]/.test(part)) {
+            // If this is not the first part and the previous part wasn't a delimiter,
+            // and this part contains Arabic, add a space
+            if (partIndex > 0 && !parts[partIndex - 1].match(/[:;؛]\s*/)) {
+              processedSentence += ' ';
+            }
+            processedSentence += part.trim();
+          } else {
+            processedSentence += part;
+          }
+        });
+
+        if (processedSentence.trim()) {
+          result += `<p class="mb-2 text-right"><span class="text-3xl font-arabic" dir="rtl" lang="ar">${processedSentence.trim()}</span></p>`;
+        }
+      } else {
+        result += sentence;
       }
     });
 
@@ -112,6 +140,7 @@ function App() {
     
     if (doaFormData.kandungan) {
       html.push('  <div id="explanation" class="mt-2 text-sm tracking-normal">');
+      html.push('    <h2 class="text-lg font-semibold mb-2">Penjelasan</h2>');
       const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
       paragraphs.forEach(paragraph => {
         html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
@@ -202,7 +231,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">HTML Converter Bekal Islam UFA Official</h1>
         
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 mb-8">
