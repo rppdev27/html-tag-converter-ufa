@@ -139,11 +139,11 @@ function App() {
 
     if (doaFormData.kandungan || doaFormData.benefit) {
       html.push('  <div id="explanation-section" class="mt-4">');
-      html.push('    <h2 class="text-xl font-bold mb-4">Penjelasan</h2>');
+      html.push('    <h2 class="text-md font-bold mb-2 border-b border-slate-400 pb-2">Penjelasan</h2>');
       
       if (doaFormData.kandungan) {
         html.push('    <div id="explanation" class="mt-2 text-sm tracking-normal">');
-        html.push('      <h3 class="text-lg font-semibold mb-2">Kandungan</h3>');
+        html.push('      <h3 class="text-md font-semibold mb-2">Kandungan</h3>');
         const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
         paragraphs.forEach(paragraph => {
           html.push(`      ${detectAndWrapArabicText(escapeHtml(paragraph))}`);
@@ -153,7 +153,7 @@ function App() {
 
       if (doaFormData.benefit) {
         html.push('    <div id="benefit" class="mt-4 text-sm tracking-normal">');
-        html.push('      <h3 class="text-lg font-semibold mb-2">Keutamaan</h3>');
+        html.push('      <h3 class="text-md font-semibold mb-2">Keutamaan</h3>');
         const paragraphs = doaFormData.benefit.split('\n').filter(p => p.trim());
         paragraphs.forEach(paragraph => {
           html.push(`      ${detectAndWrapArabicText(escapeHtml(paragraph))}`);
@@ -164,8 +164,8 @@ function App() {
     }
     
     if (doaFormData.footnote) {
-      html.push('  <div id="hadith-reference" class="mt-4 text-sm text-gray-600 tracking-normal">');
-      html.push('    <h3 class="text-lg font-semibold mb-2">Referensi</h3>');
+      html.push('  <div id="hadith-reference" class="mt-4 text-sm tracking-normal">');
+      html.push('    <h3 class="text-md font-semibold mb-2">Referensi</h3>');
       const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
       footnoteParagraphs.forEach(paragraph => {
         html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph))}`);
@@ -184,14 +184,14 @@ function App() {
     
     if (fatwaFormData.question) {
       html.push('  <div id="question" class="mb-4">');
-      html.push(`    <h2 class="text-xl font-bold mb-2">Pertanyaan:</h2>`);
+      html.push(`    <h2 class="text-md font-bold mb-2">Pertanyaan:</h2>`);
       html.push(`    ${detectAndWrapArabicText(escapeHtml(fatwaFormData.question))}`);
       html.push('  </div>');
     }
     
     if (fatwaFormData.answer) {
       html.push('  <div id="answer" class="mb-4">');
-      html.push(`    <h2 class="text-xl font-bold mb-2">Jawaban:</h2>`);
+      html.push(`    <h2 class="text-md font-bold mb-2">Jawaban:</h2>`);
       const paragraphs = fatwaFormData.answer.split('\n').filter(p => p.trim());
       paragraphs.forEach(paragraph => {
         html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
@@ -201,7 +201,7 @@ function App() {
     
     if (fatwaFormData.reference) {
       html.push('  <div id="reference" class="mt-4 text-sm text-gray-600">');
-      html.push('    <h3 class="text-lg font-semibold mb-2">Referensi</h3>');
+      html.push('    <h3 class="text-md font-semibold mb-2">Referensi</h3>');
       const referenceParagraphs = fatwaFormData.reference.split('\n').filter(p => p.trim());
       referenceParagraphs.forEach(paragraph => {
         html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
@@ -251,7 +251,6 @@ function App() {
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
         
-        {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 mb-8">
           <button
             className={`px-6 py-3 font-medium text-sm ${
@@ -276,7 +275,6 @@ function App() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Form Section */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Input Form</h2>
@@ -291,7 +289,6 @@ function App() {
             </div>
             <div className="space-y-4">
               {activeTab === 'doa' ? (
-                // Doa Form
                 <>
                   {[
                     { name: 'title', label: 'Title' },
@@ -317,7 +314,6 @@ function App() {
                   ))}
                 </>
               ) : (
-                // Fatwa Form
                 <>
                   {[
                     { name: 'question', label: 'Question' },
@@ -341,7 +337,6 @@ function App() {
             </div>
           </div>
 
-          {/* Preview Section */}
           <div className="space-y-4">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex justify-between items-center mb-4">
