@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, XCircle } from 'lucide-react';
+import { Download, XCircle, Copy, Check } from 'lucide-react';
 
 interface DoaFormData {
   title: string;
@@ -19,6 +19,7 @@ interface FatwaFormData {
 
 function App() {
   const [activeTab, setActiveTab] = useState<'doa' | 'fatwa'>('doa');
+  const [copied, setCopied] = useState(false);
   const [doaFormData, setDoaFormData] = useState<DoaFormData>({
     title: '',
     subtitle: '',
@@ -71,35 +72,13 @@ function App() {
   };
 
   const detectAndWrapArabicText = (text: string): string => {
-    // Split text into segments of Arabic and non-Arabic
-    const segments = text.split(/(\s+)/);
-    let result = '';
-    let currentArabicSegment = '';
-    
-    for (let i = 0; i < segments.length; i++) {
-      const segment = segments[i];
-      const isArabic = /[\u0600-\u06FF]/.test(segment);
-      const isWhitespace = /^\s+$/.test(segment);
-      
-      if (isArabic) {
-        currentArabicSegment += (currentArabicSegment ? ' ' : '') + segment;
-      } else if (isWhitespace && currentArabicSegment) {
-        currentArabicSegment += segment;
-      } else {
-        if (currentArabicSegment) {
-          result += `<span id="arabic-text" class="text-3xl font-arabic" dir="rtl" lang="ar">${currentArabicSegment}</span>`;
-          currentArabicSegment = '';
-        }
-        result += segment;
+    // Replace Arabic text with a single span
+    return text.replace(/[\u0600-\u06FF\s]+/g, match => {
+      if (match.trim()) {
+        return `<p class="mb-2 text-right"><span class="text-3xl font-arabic" dir="rtl" lang="ar">${match}</span></p>`;
       }
-    }
-    
-    // Add any remaining Arabic segment
-    if (currentArabicSegment) {
-      result += `<span id="arabic-text" class="text-3xl font-arabic" dir="rtl" lang="ar">${currentArabicSegment}</span>`;
-    }
-    
-    return result;
+      return match;
+    });
   };
 
   const generateDoaHTML = () => {
@@ -115,7 +94,7 @@ function App() {
     }
     
     if (doaFormData.arabicDoa) {
-      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3" dir="rtl" lang="ar">\n    ${escapeHtml(doaFormData.arabicDoa)}\n  </p>`);
+      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right" dir="rtl" lang="ar">\n    ${escapeHtml(doaFormData.arabicDoa)}\n  </p>`);
     }
     
     if (doaFormData.latin) {
@@ -130,7 +109,7 @@ function App() {
       html.push('  <div id="explanation" class="mt-2 text-sm tracking-normal">');
       const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
       paragraphs.forEach(paragraph => {
-        html.push(`    <p class="mb-2">${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
+        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
       });
       html.push('  </div>');
     }
@@ -139,7 +118,7 @@ function App() {
       html.push('  <div id="hadith-reference" class="text-sm text-gray-600 tracking-normal">');
       const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
       footnoteParagraphs.forEach(paragraph => {
-        html.push(`    <p class="mb-2">${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
+        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
       });
       html.push('  </div>');
     }
@@ -155,7 +134,7 @@ function App() {
     if (fatwaFormData.question) {
       html.push('  <div id="question" class="mb-4">');
       html.push(`    <h2 class="text-xl font-bold mb-2">Pertanyaan:</h2>`);
-      html.push(`    <p class="mb-2">${detectAndWrapArabicText(escapeHtml(fatwaFormData.question))}</p>`);
+      html.push(`    ${detectAndWrapArabicText(escapeHtml(fatwaFormData.question))}`);
       html.push('  </div>');
     }
     
@@ -164,7 +143,7 @@ function App() {
       html.push(`    <h2 class="text-xl font-bold mb-2">Jawaban:</h2>`);
       const paragraphs = fatwaFormData.answer.split('\n').filter(p => p.trim());
       paragraphs.forEach(paragraph => {
-        html.push(`    <p class="mb-2">${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
+        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
       });
       html.push('  </div>');
     }
@@ -173,7 +152,7 @@ function App() {
       html.push('  <div id="reference" class="text-sm text-gray-600">');
       const referenceParagraphs = fatwaFormData.reference.split('\n').filter(p => p.trim());
       referenceParagraphs.forEach(paragraph => {
-        html.push(`    <p class="mb-2">${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
+        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
       });
       html.push('  </div>');
     }
@@ -195,6 +174,17 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const copyContent = async () => {
+    const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
   const escapeHtml = (unsafe: string) => {
     return unsafe
       .replace(/&/g, '&amp;')
@@ -207,7 +197,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">HTML Converter Bekal Islam UFA Official</h1>
         
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 mb-8">
@@ -301,7 +291,26 @@ function App() {
           {/* Preview Section */}
           <div className="space-y-4">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">HTML Preview</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">HTML Preview</h2>
+                <button
+                  onClick={copyContent}
+                  className="flex items-center gap-1 text-gray-600 hover:text-blue-600 transition-colors"
+                  title="Copy HTML"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span className="text-sm">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-5 h-5" />
+                      <span className="text-sm">Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <pre className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md border font-mono text-sm overflow-x-auto">
                 {activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML()}
               </pre>
