@@ -87,7 +87,7 @@ function App() {
         currentArabicSegment += segment;
       } else {
         if (currentArabicSegment) {
-          result += `<span class="text-4xl font-arabic" dir="rtl" lang="ar">${currentArabicSegment}</span>`;
+          result += `<span id="arabic-text" class="text-3xl font-arabic" dir="rtl" lang="ar">${currentArabicSegment}</span>`;
           currentArabicSegment = '';
         }
         result += segment;
@@ -96,7 +96,7 @@ function App() {
     
     // Add any remaining Arabic segment
     if (currentArabicSegment) {
-      result += `<span class="text-4xl font-arabic" dir="rtl" lang="ar">${currentArabicSegment}</span>`;
+      result += `<span id="arabic-text" class="text-3xl font-arabic" dir="rtl" lang="ar">${currentArabicSegment}</span>`;
     }
     
     return result;
@@ -130,7 +130,7 @@ function App() {
       html.push('  <div id="explanation" class="mt-2 text-sm tracking-normal">');
       const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
       paragraphs.forEach(paragraph => {
-        html.push(`    <p class="mb-2">${escapeHtml(paragraph.trim())}</p>`);
+        html.push(`    <p class="mb-2">${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
       });
       html.push('  </div>');
     }
@@ -139,7 +139,7 @@ function App() {
       html.push('  <div id="hadith-reference" class="text-sm text-gray-600 tracking-normal">');
       const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
       footnoteParagraphs.forEach(paragraph => {
-        html.push(`    <p class="mb-2">${escapeHtml(paragraph.trim())}</p>`);
+        html.push(`    <p class="mb-2">${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
       });
       html.push('  </div>');
     }
@@ -173,7 +173,7 @@ function App() {
       html.push('  <div id="reference" class="text-sm text-gray-600">');
       const referenceParagraphs = fatwaFormData.reference.split('\n').filter(p => p.trim());
       referenceParagraphs.forEach(paragraph => {
-        html.push(`    <p class="mb-2">${escapeHtml(paragraph.trim())}</p>`);
+        html.push(`    <p class="mb-2">${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
       });
       html.push('  </div>');
     }
@@ -207,7 +207,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">HTML Converter Bekal Islam UFA Official</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
         
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 mb-8">
