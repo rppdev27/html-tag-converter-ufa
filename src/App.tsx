@@ -75,31 +75,24 @@ function App() {
   };
 
   const detectAndWrapArabicText = (text: string): string => {
-    if (!text) return '';
-    
-    // Split text by periods only
-    const sentences = text.split(/([.])/);
+    const sentences = text.split(/([.;؛])/);
     let result = '';
 
     sentences.forEach((sentence, index) => {
-      if (sentence === '.') {
+      if (sentence === '.' || sentence === ';' || sentence === '؛') {
         result += sentence;
         return;
       }
 
-      // Check if the sentence contains Arabic text
       if (/[\u0600-\u06FF]/.test(sentence)) {
-        // Handle text with colons and semicolons
-        const parts = sentence.split(/([:;؛]\s*)/);
+        const colonParts = sentence.split(/(:\s*)/);
         let processedSentence = '';
 
-        parts.forEach((part, partIndex) => {
-          if (part.match(/[:;؛]\s*/)) {
+        colonParts.forEach((part, partIndex) => {
+          if (part.match(/:\s*/)) {
             processedSentence += part;
           } else if (/[\u0600-\u06FF]/.test(part)) {
-            // If this is not the first part and the previous part wasn't a delimiter,
-            // and this part contains Arabic, add a space
-            if (partIndex > 0 && !parts[partIndex - 1].match(/[:;؛]\s*/)) {
+            if (partIndex > 0 && !colonParts[partIndex - 1].match(/:\s*/)) {
               processedSentence += ' ';
             }
             processedSentence += part.trim();
@@ -120,103 +113,73 @@ function App() {
   };
 
   const generateDoaHTML = () => {
-    const html = [];
+    const html: string[] = [];
     
-    html.push('<!DOCTYPE html>');
-    html.push('<html lang="en">');
-    html.push('<head>');
-    html.push('  <meta charset="UTF-8">');
-    html.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
-    html.push('  <title>Doa Content</title>');
-    html.push('</head>');
-    html.push('<body>');
     html.push('<div class="content">');
     
-    // Title
     if (doaFormData.title) {
       html.push(`  <h1 id="title" class="text-xl font-bold text-center">${escapeHtml(doaFormData.title)}</h1>`);
     }
     
-    // Subtitle
     if (doaFormData.subtitle) {
       html.push(`  <h2 id="repeat-instruction" class="text-xs text-center">${escapeHtml(doaFormData.subtitle)}</h2>`);
     }
     
-    // Arabic Doa
     if (doaFormData.arabicDoa) {
       html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right" dir="rtl" lang="ar">${escapeHtml(doaFormData.arabicDoa)}</p>`);
     }
     
-    // Latin
     if (doaFormData.latin) {
       html.push(`  <p id="latin-text" class="italic mt-2 text-sm tracking-normal"><i>${escapeHtml(doaFormData.latin)}</i></p>`);
     }
     
-    // Meaning
     if (doaFormData.meaning) {
       html.push(`  <p id="translation" class="mt-2 text-sm tracking-normal">${escapeHtml(doaFormData.meaning)}</p>`);
     }
 
-    // Penjelasan section (Kandungan & Keutamaan)
     if (doaFormData.kandungan || doaFormData.benefit) {
       html.push('  <div id="explanation-section" class="mt-4">');
       html.push('    <h2 class="text-xl font-bold mb-4">Penjelasan</h2>');
       
-      // Kandungan
       if (doaFormData.kandungan) {
         html.push('    <div id="explanation" class="mt-2 text-sm tracking-normal">');
         html.push('      <h3 class="text-lg font-semibold mb-2">Kandungan</h3>');
         const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
         paragraphs.forEach(paragraph => {
-          html.push(`      <p>${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
+          html.push(`      ${detectAndWrapArabicText(escapeHtml(paragraph))}`);
         });
         html.push('    </div>');
       }
 
-      // Keutamaan
-      html.push('    <div id="benefit" class="mt-4 text-sm tracking-normal">');
-      html.push('      <h3 class="text-lg font-semibold mb-2">Keutamaan</h3>');
       if (doaFormData.benefit) {
+        html.push('    <div id="benefit" class="mt-4 text-sm tracking-normal">');
+        html.push('      <h3 class="text-lg font-semibold mb-2">Keutamaan</h3>');
         const paragraphs = doaFormData.benefit.split('\n').filter(p => p.trim());
         paragraphs.forEach(paragraph => {
-          html.push(`      <p>${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
+          html.push(`      ${detectAndWrapArabicText(escapeHtml(paragraph))}`);
         });
+        html.push('    </div>');
       }
-      html.push('    </div>');
       html.push('  </div>');
     }
     
-    // Footnote/Reference section - Simplified handling
-    if (doaFormData.footnote && doaFormData.footnote.trim()) {
-        html.push('  <div id="hadith-reference" class="mt-4 text-sm text-gray-600 tracking-normal">');
-        html.push('    <h3 class="text-lg font-semibold mb-2">Referensi</h3>');
-        
-        // Process footnote paragraphs with Arabic text detection
-        const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
-        footnoteParagraphs.forEach(paragraph => {
-          html.push(`    <p>${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
-        });
-        
-        html.push('  </div>');
-      }
+    if (doaFormData.footnote) {
+      html.push('  <div id="hadith-reference" class="mt-4 text-sm text-gray-600 tracking-normal">');
+      html.push('    <h3 class="text-lg font-semibold mb-2">Referensi</h3>');
+      const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
+      footnoteParagraphs.forEach(paragraph => {
+        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph))}`);
+      });
+      html.push('  </div>');
+    }
     
     html.push('</div>');
-    html.push('</body>');
-    html.push('</html>');
-    
     return html.join('\n');
   };
 
   const generateFatwaHTML = () => {
-    const html = [];
-    html.push('<!DOCTYPE html>');
-    html.push('<html lang="en">');
-    html.push('<head>');
-    html.push('  <meta charset="UTF-8">');
-    html.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
-    html.push('  <title>Fatwa Content</title>');
-    html.push('</head>');
-    html.push('<body>');
+    const html: string[] = [];
+    
     html.push('<div class="content">');
     
     if (fatwaFormData.question) {
@@ -241,37 +204,31 @@ function App() {
       html.push('    <h3 class="text-lg font-semibold mb-2">Referensi</h3>');
       const referenceParagraphs = fatwaFormData.reference.split('\n').filter(p => p.trim());
       referenceParagraphs.forEach(paragraph => {
-        html.push(`    <p>${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}</p>`);
+        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
       });
       html.push('  </div>');
     }
     
     html.push('</div>');
-    html.push('</body>');
-    html.push('</html>');
     return html.join('\n');
   };
 
   const downloadContent = () => {
-    try {
-      const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
-      const blob = new Blob([content], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${activeTab}-content.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading content:', error);
-    }
+    const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
+    const blob = new Blob([content], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeTab}-content.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const copyContent = async () => {
+    const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
     try {
-      const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
       await navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -280,8 +237,7 @@ function App() {
     }
   };
 
-  const escapeHtml = (unsafe: string): string => {
-    if (!unsafe) return '';
+  const escapeHtml = (unsafe: string) => {
     return unsafe
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -353,7 +309,7 @@ function App() {
                       </label>
                       <textarea
                         name={field.name}
-                        value={doaFormData[field.name as keyof DoaFormData] || ''}
+                        value={doaFormData[field.name as keyof DoaFormData]}
                         onChange={handleDoaChange}
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
                       />
@@ -374,7 +330,7 @@ function App() {
                       </label>
                       <textarea
                         name={field.name}
-                        value={fatwaFormData[field.name as keyof FatwaFormData] || ''}
+                        value={fatwaFormData[field.name as keyof FatwaFormData]}
                         onChange={handleFatwaChange}
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
                       />
