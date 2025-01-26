@@ -168,7 +168,7 @@ function App() {
       html.push('    <h3 class="text-md font-semibold mb-2">Referensi</h3>');
       const lines = doaFormData.footnote.split('\n').filter(line => line.trim());
       lines.forEach((line, index) => {
-        html.push(`    <p${index > 0 ? ' class="mt-2"' : ''}>${detectAndWrapArabicText(escapeHtml(line))}</p>`);
+        html.push(`    <p${index > 0 ? ' class="mt-0"' : ''}>${detectAndWrapArabicText(escapeHtml(line))}</p>`);
       });
       html.push('  </div>');
     }
