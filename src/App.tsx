@@ -126,7 +126,7 @@ function App() {
     }
     
     if (doaFormData.arabicDoa) {
-      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right font-medium" dir="rtl" lang="ar">${escapeHtml(doaFormData.arabicDoa)}</p>`);
+      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right" dir="rtl" lang="ar">${escapeHtml(doaFormData.arabicDoa)}</p>`);
     }
     
     if (doaFormData.latin) {
@@ -166,9 +166,9 @@ function App() {
     if (doaFormData.footnote) {
       html.push('  <div id="hadith-reference" class="mt-4 text-sm tracking-normal">');
       html.push('    <h3 class="text-md font-semibold mb-2">Referensi</h3>');
-      const footnoteParagraphs = doaFormData.footnote.split('\n').filter(p => p.trim());
-      footnoteParagraphs.forEach(paragraph => {
-        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph))}`);
+      const lines = doaFormData.footnote.split('\n').filter(line => line.trim());
+      lines.forEach((line, index) => {
+        html.push(`    <p${index > 0 ? ' class="mt-2"' : ''}>${detectAndWrapArabicText(escapeHtml(line))}</p>`);
       });
       html.push('  </div>');
     }
