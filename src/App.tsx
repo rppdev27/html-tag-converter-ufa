@@ -62,7 +62,7 @@ const processText = (text: string): string => {
   arabicParts.forEach((content, index) => {
     processed = processed.replace(
       `__ARABIC_${index}__`,
-      `<span class="text-2xl font-arabic" dir="rtl" lang="ar">${content}</span>`
+      `<span class="text-3xl font-arabic" dir="rtl" lang="ar">${content}</span>`
     );
   });
 
