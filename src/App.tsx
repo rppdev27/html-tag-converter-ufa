@@ -18,57 +18,6 @@ interface FatwaFormData {
   reference: string;
 }
 
-const escapeHtml = (unsafe: string) => {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-};
-
-// const processText = (text: string): string => {
-//   // First escape HTML except for our special tags
-//   let processed = text.replace(/\[lang="ar"\]([\s\S]*?)\[\/lang="ar"\]/g, (match, content) => {
-//     return `[lang="ar"]${escapeHtml(content)}[/lang="ar"]`;
-//   });
-  
-//   // Escape the rest of the text
-//   processed = processed.replace(/([^\[]*?)(\[lang="ar"\]|$)/g, (_, text, tag) => {
-//     return escapeHtml(text) + tag;
-//   });
-
-//   // Process the Arabic tags
-//   processed = processed.replace(
-//     /\[lang="ar"\]([\s\S]*?)\[\/lang="ar"\]/g,
-//     '<span class="text-2xl font-arabic" dir="rtl" lang="ar">$1</span>'
-//   );
-
-//   return processed;
-// };
-
-const processText = (text: string): string => {
-  // Store Arabic content and replace with placeholders
-  const arabicParts: string[] = [];
-  let processed = text.replace(/\[lang="ar"\]([\s\S]*?)\[\/lang="ar"\]/g, (match, content) => {
-    arabicParts.push(content);
-    return `__ARABIC_${arabicParts.length - 1}__`;
-  });
-  
-  // Escape HTML in the rest of the text
-  processed = escapeHtml(processed);
-  
-  // Restore Arabic content with proper HTML
-  arabicParts.forEach((content, index) => {
-    processed = processed.replace(
-      `__ARABIC_${index}__`,
-      `<span class="text-3xl font-arabic" dir="rtl" lang="ar">${content}</span>`
-    );
-  });
-
-  return processed;
-}
-
 function App() {
   const [activeTab, setActiveTab] = useState<'doa' | 'fatwa'>('doa');
   const [copied, setCopied] = useState(false);
@@ -125,17 +74,50 @@ function App() {
     });
   };
 
+  const detectAndWrapArabicText = (text: string): string => {
+    // First handle BBCode-style language tags
+    const bbCodeRegex = /\[lang="ar"\](.*?)\[\/lang="ar"\]/g;
+    const processedText = text.replace(bbCodeRegex, (match, content) => {
+      return `<span class="text-3xl font-arabic" dir="rtl" lang="ar">${content}</span>`;
+    });
+
+    // For kandungan section, combine consecutive Arabic words
+    if (text.includes('خطاياه') || text.includes('المشرق')) { // Simple check if it's kandungan content
+      const arabicTextRegex = /([\u0600-\u06FF\s]+)/g;
+      return processedText.replace(arabicTextRegex, (match) => {
+        if (match.trim()) {
+          return `<span class="text-3xl font-arabic" dir="rtl" lang="ar">${match}</span>`;
+        }
+        return match;
+      });
+    }
+
+    // Then handle any remaining Arabic text word by word for other sections
+    const words = processedText.split(/(\s+)/);
+    let result = '';
+
+    words.forEach((word) => {
+      if (!word.includes('span') && /[\u0600-\u06FF]/.test(word)) {
+        result += `<span class="text-3xl font-arabic" dir="rtl" lang="ar">${word}</span>`;
+      } else {
+        result += word;
+      }
+    });
+
+    return result;
+  };
+
   const generateDoaHTML = () => {
     const html: string[] = [];
     
     html.push('<div class="content">');
     
     if (doaFormData.title) {
-      html.push(`  <h1 id="title" class="text-xl font-bold text-center">${processText(doaFormData.title)}</h1>`);
+      html.push(`  <h1 id="title" class="text-xl font-bold text-center">${escapeHtml(doaFormData.title)}</h1>`);
     }
     
     if (doaFormData.subtitle) {
-      html.push(`  <h2 id="repeat-instruction" class="text-xs text-center">${processText(doaFormData.subtitle)}</h2>`);
+      html.push(`  <h2 id="repeat-instruction" class="text-xs text-center">${escapeHtml(doaFormData.subtitle)}</h2>`);
     }
     
     if (doaFormData.arabicDoa) {
@@ -143,11 +125,11 @@ function App() {
     }
     
     if (doaFormData.latin) {
-      html.push(`  <p id="latin-text" class="italic mt-2 text-sm tracking-normal"><i>${processText(doaFormData.latin)}</i></p>`);
+      html.push(`  <p id="latin-text" class="italic mt-2 text-sm tracking-normal"><i>${escapeHtml(doaFormData.latin)}</i></p>`);
     }
     
     if (doaFormData.meaning) {
-      html.push(`  <p id="translation" class="mt-2 text-sm tracking-normal">${processText(doaFormData.meaning)}</p>`);
+      html.push(`  <p id="translation" class="mt-2 text-sm tracking-normal">${escapeHtml(doaFormData.meaning)}</p>`);
     }
 
     if (doaFormData.kandungan || doaFormData.benefit) {
@@ -159,7 +141,7 @@ function App() {
         html.push('      <h3 class="text-md font-semibold mb-2">Kandungan</h3>');
         const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
         paragraphs.forEach(paragraph => {
-          html.push(`      <p class="mt-0">${processText(paragraph)}</p>`);
+          html.push(`      <p class="mt-0">${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
         });
         html.push('    </div>');
       }
@@ -169,7 +151,7 @@ function App() {
         html.push('      <h3 class="text-md font-semibold mb-2">Keutamaan</h3>');
         const paragraphs = doaFormData.benefit.split('\n').filter(p => p.trim());
         paragraphs.forEach(paragraph => {
-          html.push(`      <p class="mt-0">${processText(paragraph)}</p>`);
+          html.push(`      <p class="mt-0">${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
         });
         html.push('    </div>');
       }
@@ -181,7 +163,7 @@ function App() {
       html.push('    <h3 class="text-md font-semibold mb-2">Referensi</h3>');
       const lines = doaFormData.footnote.split('\n').filter(line => line.trim());
       lines.forEach(line => {
-        html.push(`    <p class="mt-0">${processText(line)}</p>`);
+        html.push(`    <p class="mt-0">${detectAndWrapArabicText(escapeHtml(line))}</p>`);
       });
       html.push('  </div>');
     }
@@ -198,7 +180,7 @@ function App() {
     if (fatwaFormData.question) {
       html.push('  <div id="question" class="mb-4">');
       html.push(`    <h2 class="text-md font-bold mb-2">Pertanyaan:</h2>`);
-      html.push(`    ${processText(fatwaFormData.question)}`);
+      html.push(`    ${detectAndWrapArabicText(escapeHtml(fatwaFormData.question))}`);
       html.push('  </div>');
     }
     
@@ -207,7 +189,7 @@ function App() {
       html.push(`    <h2 class="text-md font-bold mb-2">Jawaban:</h2>`);
       const paragraphs = fatwaFormData.answer.split('\n').filter(p => p.trim());
       paragraphs.forEach(paragraph => {
-        html.push(`    ${processText(paragraph.trim())}`);
+        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
       });
       html.push('  </div>');
     }
@@ -217,7 +199,7 @@ function App() {
       html.push('    <h3 class="text-md font-semibold mb-2">Referensi</h3>');
       const referenceParagraphs = fatwaFormData.reference.split('\n').filter(p => p.trim());
       referenceParagraphs.forEach(paragraph => {
-        html.push(`    ${processText(paragraph.trim())}`);
+        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
       });
       html.push('  </div>');
     }
@@ -250,10 +232,28 @@ function App() {
     }
   };
 
+  const escapeHtml = (unsafe: string) => {
+    // Don't escape BBCode-style tags
+    const bbCodeRegex = /(\[lang="ar"\].*?\[\/lang="ar"\])/g;
+    const parts = unsafe.split(bbCodeRegex);
+    
+    return parts.map((part) => {
+      if (part.match(bbCodeRegex)) {
+        return part;
+      }
+      return part
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }).join('');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">HTML Converter Bekal Islam App</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
         
         <div className="flex border-b border-gray-200 mb-8">
           <button
