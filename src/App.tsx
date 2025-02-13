@@ -1,25 +1,14 @@
 import React, { useState } from 'react';
 import { Download, XCircle, Copy, Check } from 'lucide-react';
-
-interface DoaFormData {
-  title: string;
-  subtitle: string;
-  arabicDoa: string;
-  latin: string;
-  meaning: string;
-  kandungan: string;
-  benefit: string;
-  footnote: string;
-}
-
-interface FatwaFormData {
-  question: string;
-  answer: string;
-  reference: string;
-}
+import { DoaFormData, FatwaFormData, ActiveTab } from './types';
+import { generateDoaHTML } from './generators/doa-generator';
+import { generateFatwaHTML } from './generators/fatwa-generator';
+import { generateAdditionalHTML } from './generators/additional-generator';
+import { processArabicMultiLines } from './generators/arabic-multiline-generator';
+import { generateSpanReducerHTML } from './generators/span-reducer';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'doa' | 'fatwa'>('doa');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('span-reducer');
   const [copied, setCopied] = useState(false);
   const [doaFormData, setDoaFormData] = useState<DoaFormData>({
     title: '',
@@ -36,6 +25,9 @@ function App() {
     answer: '',
     reference: ''
   });
+  const [additionalInput, setAdditionalInput] = useState('');
+  const [arabicMultiLinesInput, setArabicMultiLinesInput] = useState('');
+  const [spanReducerInput, setSpanReducerInput] = useState('');
 
   const handleDoaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -74,142 +66,25 @@ function App() {
     });
   };
 
-  const detectAndWrapArabicText = (text: string): string => {
-    // First handle BBCode-style language tags
-    const bbCodeRegex = /\[lang="ar"\](.*?)\[\/lang="ar"\]/g;
-    const processedText = text.replace(bbCodeRegex, (match, content) => {
-      return `<span class="text-3xl font-arabic" dir="rtl" lang="ar">${content}</span>`;
-    });
-
-    // For kandungan section, combine consecutive Arabic words
-    if (text.includes('خطاياه') || text.includes('المشرق')) { // Simple check if it's kandungan content
-      const arabicTextRegex = /([\u0600-\u06FF\s]+)/g;
-      return processedText.replace(arabicTextRegex, (match) => {
-        if (match.trim()) {
-          return `<span class="text-3xl font-arabic" dir="rtl" lang="ar">${match}</span>`;
-        }
-        return match;
-      });
+  const getContent = () => {
+    switch (activeTab) {
+      case 'doa':
+        return generateDoaHTML(doaFormData);
+      case 'fatwa':
+        return generateFatwaHTML(fatwaFormData);
+      case 'additional':
+        return generateAdditionalHTML(additionalInput);
+      case 'arabic-multi-lines':
+        return processArabicMultiLines(arabicMultiLinesInput);
+      case 'span-reducer':
+        return generateSpanReducerHTML(spanReducerInput);
+      default:
+        return '';
     }
-
-    // Then handle any remaining Arabic text word by word for other sections
-    const words = processedText.split(/(\s+)/);
-    let result = '';
-
-    words.forEach((word) => {
-      if (!word.includes('span') && /[\u0600-\u06FF]/.test(word)) {
-        result += `<span class="text-3xl font-arabic" dir="rtl" lang="ar">${word}</span>`;
-      } else {
-        result += word;
-      }
-    });
-
-    return result;
-  };
-
-  const generateDoaHTML = () => {
-    const html: string[] = [];
-    
-    html.push('<div class="content">');
-    
-    if (doaFormData.title) {
-      html.push(`  <h1 id="title" class="text-xl font-bold text-center">${escapeHtml(doaFormData.title)}</h1>`);
-    }
-    
-    if (doaFormData.subtitle) {
-      html.push(`  <h2 id="repeat-instruction" class="text-xs text-center">${escapeHtml(doaFormData.subtitle)}</h2>`);
-    }
-    
-    if (doaFormData.arabicDoa) {
-      html.push(`  <p id="arabic-text" class="text-4xl font-arabic mt-3 text-right" dir="rtl" lang="ar">${escapeHtml(doaFormData.arabicDoa)}</p>`);
-    }
-    
-    if (doaFormData.latin) {
-      html.push(`  <p id="latin-text" class="italic mt-2 text-sm tracking-normal"><i>${escapeHtml(doaFormData.latin)}</i></p>`);
-    }
-    
-    if (doaFormData.meaning) {
-      html.push(`  <p id="translation" class="mt-2 text-sm tracking-normal">${escapeHtml(doaFormData.meaning)}</p>`);
-    }
-
-    if (doaFormData.kandungan || doaFormData.benefit) {
-      html.push('  <div id="explanation-section" class="mt-4">');
-      html.push('    <h2 class="text-md font-bold mb-2 border-b border-slate-400 pb-2">Penjelasan</h2>');
-      
-      if (doaFormData.kandungan) {
-        html.push('    <div id="explanation" class="mt-2 text-sm tracking-normal">');
-        html.push('      <h3 class="text-md font-semibold mb-2">Kandungan</h3>');
-        const paragraphs = doaFormData.kandungan.split('\n').filter(p => p.trim());
-        paragraphs.forEach(paragraph => {
-          html.push(`      <p class="mt-0">${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
-        });
-        html.push('    </div>');
-      }
-
-      if (doaFormData.benefit) {
-        html.push('    <div id="benefit" class="mt-4 text-sm tracking-normal">');
-        html.push('      <h3 class="text-md font-semibold mb-2">Keutamaan</h3>');
-        const paragraphs = doaFormData.benefit.split('\n').filter(p => p.trim());
-        paragraphs.forEach(paragraph => {
-          html.push(`      <p class="mt-0">${detectAndWrapArabicText(escapeHtml(paragraph))}</p>`);
-        });
-        html.push('    </div>');
-      }
-      html.push('  </div>');
-    }
-    
-    if (doaFormData.footnote) {
-      html.push('  <div id="hadith-reference" class="mt-4 text-sm tracking-normal">');
-      html.push('    <h3 class="text-md font-semibold mb-2">Referensi</h3>');
-      const lines = doaFormData.footnote.split('\n').filter(line => line.trim());
-      lines.forEach(line => {
-        html.push(`    <p class="mt-0">${detectAndWrapArabicText(escapeHtml(line))}</p>`);
-      });
-      html.push('  </div>');
-    }
-    
-    html.push('</div>');
-    return html.join('\n');
-  };
-
-  const generateFatwaHTML = () => {
-    const html: string[] = [];
-    
-    html.push('<div class="content">');
-    
-    if (fatwaFormData.question) {
-      html.push('  <div id="question" class="mb-4">');
-      html.push(`    <h2 class="text-md font-bold mb-2">Pertanyaan:</h2>`);
-      html.push(`    ${detectAndWrapArabicText(escapeHtml(fatwaFormData.question))}`);
-      html.push('  </div>');
-    }
-    
-    if (fatwaFormData.answer) {
-      html.push('  <div id="answer" class="mb-4">');
-      html.push(`    <h2 class="text-md font-bold mb-2">Jawaban:</h2>`);
-      const paragraphs = fatwaFormData.answer.split('\n').filter(p => p.trim());
-      paragraphs.forEach(paragraph => {
-        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
-      });
-      html.push('  </div>');
-    }
-    
-    if (fatwaFormData.reference) {
-      html.push('  <div id="reference" class="mt-4 text-sm text-gray-600">');
-      html.push('    <h3 class="text-md font-semibold mb-2">Referensi</h3>');
-      const referenceParagraphs = fatwaFormData.reference.split('\n').filter(p => p.trim());
-      referenceParagraphs.forEach(paragraph => {
-        html.push(`    ${detectAndWrapArabicText(escapeHtml(paragraph.trim()))}`);
-      });
-      html.push('  </div>');
-    }
-    
-    html.push('</div>');
-    return html.join('\n');
   };
 
   const downloadContent = () => {
-    const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
+    const content = getContent();
     const blob = new Blob([content], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -222,9 +97,8 @@ function App() {
   };
 
   const copyContent = async () => {
-    const content = activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML();
     try {
-      await navigator.clipboard.writeText(content);
+      await navigator.clipboard.writeText(getContent());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -232,67 +106,53 @@ function App() {
     }
   };
 
-  const escapeHtml = (unsafe: string) => {
-    // Don't escape BBCode-style tags
-    const bbCodeRegex = /(\[lang="ar"\].*?\[\/lang="ar"\])/g;
-    const parts = unsafe.split(bbCodeRegex);
-    
-    return parts.map((part) => {
-      if (part.match(bbCodeRegex)) {
-        return part;
-      }
-      return part
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }).join('');
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-center mb-8">HTML Content Creator</h1>
         
-        <div className="flex border-b border-gray-200 mb-8">
-          <button
-            className={`px-6 py-3 font-medium text-sm ${
-              activeTab === 'doa'
-                ? 'border-b-2 border-blue-500 text-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('doa')}
-          >
-            Doa
-          </button>
-          <button
-            className={`px-6 py-3 font-medium text-sm ${
-              activeTab === 'fatwa'
-                ? 'border-b-2 border-blue-500 text-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('fatwa')}
-          >
-            Fatwa
-          </button>
+        <div className="border-b border-gray-200 mb-8">
+          <div className="inline-block">
+            {[
+              { id: 'span-reducer', label: 'Span Reducer' },
+              { id: 'doa', label: 'Doa' },
+              { id: 'fatwa', label: 'Fatwa' },
+              { id: 'additional', label: 'Additional' },
+              { id: 'arabic-multi-lines', label: 'Arabic Multi Lines' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                className={`px-6 py-3 font-medium text-sm ${
+                  activeTab === tab.id
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setActiveTab(tab.id as ActiveTab)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4">
+              <div className="float-right">
+                <button
+                  onClick={activeTab === 'doa' ? clearDoaForm : clearFatwaForm}
+                  className="inline-block text-gray-600 hover:text-red-600 transition-colors"
+                  title="Clear form"
+                >
+                  <span className="inline-block align-middle mr-1"><XCircle className="w-5 h-5" /></span>
+                  <span className="inline-block align-middle text-sm">Clear</span>
+                </button>
+              </div>
               <h2 className="text-xl font-semibold">Input Form</h2>
-              <button
-                onClick={activeTab === 'doa' ? clearDoaForm : clearFatwaForm}
-                className="flex items-center gap-1 text-gray-600 hover:text-red-600 transition-colors"
-                title="Clear form"
-              >
-                <XCircle className="w-5 h-5" />
-                <span className="text-sm">Clear</span>
-              </button>
             </div>
+            
             <div className="space-y-4">
-              {activeTab === 'doa' ? (
+              {activeTab === 'doa' && (
                 <>
                   {[
                     { name: 'title', label: 'Title' },
@@ -317,7 +177,9 @@ function App() {
                     </div>
                   ))}
                 </>
-              ) : (
+              )}
+              
+              {activeTab === 'fatwa' && (
                 <>
                   {[
                     { name: 'question', label: 'Question' },
@@ -338,42 +200,85 @@ function App() {
                   ))}
                 </>
               )}
+              
+              {activeTab === 'additional' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Input HTML
+                  </label>
+                  <textarea
+                    value={additionalInput}
+                    onChange={(e) => setAdditionalInput(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[200px]"
+                  />
+                </div>
+              )}
+              
+              {activeTab === 'arabic-multi-lines' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Arabic Text (One line per reference)
+                  </label>
+                  <textarea
+                    value={arabicMultiLinesInput}
+                    onChange={(e) => setArabicMultiLinesInput(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[200px]"
+                    dir="rtl"
+                  />
+                </div>
+              )}
+
+              {activeTab === 'span-reducer' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Input HTML with Multiple Spans
+                  </label>
+                  <textarea
+                    value={spanReducerInput}
+                    onChange={(e) => setSpanReducerInput(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[200px]"
+                    placeholder="Paste HTML with multiple Arabic spans here..."
+                  />
+                </div>
+              )}
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex justify-between items-center mb-4">
+              <div className="mb-4">
+                <div className="float-right">
+                  <button
+                    onClick={copyContent}
+                    className="inline-block text-gray-600 hover:text-blue-600 transition-colors"
+                    title="Copy HTML"
+                  >
+                    {copied ? (
+                      <>
+                        <span className="inline-block align-middle mr-1"><Check className="w-5 h-5" /></span>
+                        <span className="inline-block align-middle text-sm">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="inline-block align-middle mr-1"><Copy className="w-5 h-5" /></span>
+                        <span className="inline-block align-middle text-sm">Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
                 <h2 className="text-xl font-semibold">HTML Preview</h2>
-                <button
-                  onClick={copyContent}
-                  className="flex items-center gap-1 text-gray-600 hover:text-blue-600 transition-colors"
-                  title="Copy HTML"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-5 h-5" />
-                      <span className="text-sm">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-5 h-5" />
-                      <span className="text-sm">Copy</span>
-                    </>
-                  )}
-                </button>
               </div>
               <pre className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md border font-mono text-sm overflow-x-auto">
-                {activeTab === 'doa' ? generateDoaHTML() : generateFatwaHTML()}
+                {getContent()}
               </pre>
             </div>
 
             <button
               onClick={downloadContent}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
             >
-              <Download className="w-5 h-5" />
-              Download HTML
+              <span className="inline-block align-middle mr-2"><Download className="w-5 h-5" /></span>
+              <span className="inline-block align-middle">Download HTML</span>
             </button>
           </div>
         </div>
