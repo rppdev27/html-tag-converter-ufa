@@ -7,42 +7,36 @@ export const generateFatwaHTML = (fatwaFormData: FatwaFormData): string => {
   html.push('<div>');
   
   if (fatwaFormData.question) {
-    html.push('  <div id="question" class="mb-4">');
     const questionLines = fatwaFormData.question.split('\n').filter(line => line.trim());
     questionLines.forEach(line => {
       if (isArabicText(line)) {
-        html.push(`    <p class="mt-0 text-right"><span class="text-2xl font-arabic" dir="rtl" lang="ar">${line}</span></p>`);
+        html.push(`  <p class="mt-0 text-right"><span class="text-2xl font-arabic" dir="rtl" lang="ar">${line}</span></p>`);
       } else {
-        html.push(`    <p class="mt-0">${line}</p>`);
+        html.push(`  <p class="mt-0">${line}</p>`);
       }
     });
-    html.push('  </div>');
   }
   
   if (fatwaFormData.answer) {
-    html.push('  <div id="answer" class="mb-4">');
     const answerLines = fatwaFormData.answer.split('\n').filter(line => line.trim());
     answerLines.forEach(line => {
       if (isArabicText(line)) {
-        html.push(`    <p class="mt-0 text-right"><span class="text-2xl font-arabic" dir="rtl" lang="ar">${line}</span></p>`);
+        html.push(`  <p class="mt-0 text-right"><span class="text-2xl font-arabic" dir="rtl" lang="ar">${line}</span></p>`);
       } else {
-        html.push(`    <p class="mt-0">${line}</p>`);
+        html.push(`  <p class="mt-0">${line}</p>`);
       }
     });
-    html.push('  </div>');
   }
   
   if (fatwaFormData.reference) {
-    html.push('  <div id="reference" class="mt-4">');
     const referenceLines = fatwaFormData.reference.split('\n').filter(line => line.trim());
     referenceLines.forEach(line => {
       if (isArabicText(line)) {
-        html.push(`    <p class="mt-0 text-right"><span class="text-2xl font-arabic" dir="rtl" lang="ar">${line}</span></p>`);
+        html.push(`  <p class="mt-0 text-right"><span class="text-2xl font-arabic" dir="rtl" lang="ar">${line}</span></p>`);
       } else {
-        html.push(`    <p class="mt-0">${line}</p>`);
+        html.push(`  <p class="mt-0">${line}</p>`);
       }
     });
-    html.push('  </div>');
   }
   
   html.push('</div>');
