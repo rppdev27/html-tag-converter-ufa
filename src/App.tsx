@@ -8,7 +8,7 @@ import { processArabicMultiLines } from './generators/arabic-multiline-generator
 import { generateSpanReducerHTML } from './generators/span-reducer';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('span-reducer');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('fatwa');
   const [copied, setCopied] = useState(false);
   const [doaFormData, setDoaFormData] = useState<DoaFormData>({
     title: '',
@@ -114,11 +114,11 @@ function App() {
         <div className="border-b border-gray-200 mb-8">
           <div className="inline-block">
             {[
-              { id: 'span-reducer', label: 'Span Reducer' },
-              { id: 'doa', label: 'Doa' },
               { id: 'fatwa', label: 'Fatwa' },
+              { id: 'doa', label: 'Doa' },
               { id: 'additional', label: 'Additional' },
-              { id: 'arabic-multi-lines', label: 'Arabic Multi Lines' }
+              { id: 'arabic-multi-lines', label: 'Arabic Multi Lines' },
+              { id: 'span-reducer', label: 'Span Reducer' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -195,6 +195,7 @@ function App() {
                         value={fatwaFormData[field.name as keyof FatwaFormData]}
                         onChange={handleFatwaChange}
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
+                        dir="rtl"
                       />
                     </div>
                   ))}

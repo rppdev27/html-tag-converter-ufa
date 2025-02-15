@@ -15,4 +15,4 @@ export interface FatwaFormData {
   reference: string;
 }
 
-export type ActiveTab = 'doa' | 'fatwa' | 'additional' | 'arabic-multi-lines' | 'span-reducer';
+export type ActiveTab = 'fatwa' | 'doa' | 'additional' | 'arabic-multi-lines' | 'span-reducer';
